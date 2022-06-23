@@ -7,7 +7,14 @@ import reportWebVitals from './reportWebVitals';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <App
+      dotSpacing={30}
+      dotColor="rgb(60, 256, 100)"
+      lineWidth={6}
+      alphaTickCount={100}
+      maxMagnitude={20}
+      radius={1000}
+    />
   </React.StrictMode>
 );
 
