@@ -14,9 +14,3 @@ body {
   height: 100%;
   padding: 100px;
 }
-
-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
 import gsap from 'https://cdn.skypack.dev/gsap@3.10.4';
 
 import useResizeObserver from './useResizeObserver';
@@ -105,7 +106,6 @@ Dot.prototype.getAlpha = function (mouseOver) {
 };
 Dot.prototype.draw = function (context, mouseOver) {
   this.setAlpha();
-  // context.strokeStyle = this.getColor(mouseOver);
   context.globalAlpha = this.getAlpha(mouseOver);
   context.strokeStyle = this.color;
   context.lineWidth = this.lineWidth;
@@ -114,7 +114,14 @@ Dot.prototype.draw = function (context, mouseOver) {
   context.save();
   context.beginPath();
 
-  context.setTransform(1, 0, 0, 1, this.left, this.top);
+  context.setTransform(
+    devicePixelRatio,
+    0,
+    0,
+    devicePixelRatio,
+    this.left,
+    this.top
+  );
   context.rotate(this.angle);
 
   context.moveTo(-this.magnitude / 2, 0);
@@ -125,6 +132,17 @@ Dot.prototype.draw = function (context, mouseOver) {
   context.restore();
 };
 
+const Wrapper = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
+const Canvas = styled.canvas`
+  display: block;
+  width: ${({ styleWidth }) => styleWidth};
+  height: ${({ styleHeight }) => styleHeight};
+`;
+
 function App({
   dotSpacing,
   dotColor,
@@ -134,7 +152,8 @@ function App({
   radius,
 }) {
   const canvasRef = useRef(null);
-  const canvasBox = useResizeObserver(canvasRef);
+  const canvasBoxRef = useRef(null);
+  const canvasBox = useResizeObserver(canvasBoxRef);
 
   const dots = useRef(null);
 
@@ -210,8 +229,8 @@ function App({
 
       dots.current = [...new Array(numRows)].map((row, i) =>
         [...new Array(numCols)].map((col, j) => {
-          const top = (height / (numRows + 1)) * (i + 1);
-          const left = (width / (numCols + 1)) * (j + 1);
+          const top = ((height * devicePixelRatio) / (numRows + 1)) * (i + 1);
+          const left = ((width * devicePixelRatio) / (numCols + 1)) * (j + 1);
 
           return new Dot(left, top, dotColor, lineWidth, alphaTickCount);
         })
@@ -226,8 +245,8 @@ function App({
 
       dots.current.forEach((row) => {
         row.forEach((dot) => {
-          const dx = relMousePosition.x - dot.left;
-          const dy = relMousePosition.y - dot.top;
+          const dx = relMousePosition.x - dot.left / devicePixelRatio;
+          const dy = relMousePosition.y - dot.top / devicePixelRatio;
           const dist = Math.sqrt(dx ** 2 + dy ** 2) || 1;
 
           const angle = Math.atan2(dy, dx);
@@ -274,11 +293,16 @@ function App({
   }, []);
 
   return (
-    <canvas
-      width={(canvasBox && canvasBox.width) || 1}
-      height={(canvasBox && canvasBox.height) || 1}
-      ref={canvasRef}
-    ></canvas>
+    <Wrapper ref={canvasBoxRef}>
+      <Canvas
+        // keeping canvas and styled-components dimensions separate lets us downsample to keep things looking sharp on retina / high-DPI displays
+        width={(canvasBox && canvasBox.width * devicePixelRatio) || null}
+        height={(canvasBox && canvasBox.height * devicePixelRatio) || null}
+        styleWidth={canvasBox && canvasBox.width + 'px'}
+        styleHeight={canvasBox && canvasBox.height + 'px'}
+        ref={canvasRef}
+      ></Canvas>
+    </Wrapper>
   );
 }
 
